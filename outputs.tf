@@ -17,3 +17,8 @@ output "alb_security_group_id" {
   description = "ALB Guvenlik Grubu kimligi"
   value       = aws_security_group.alb_sg.id
 }
+
+output "alb_dns_name" {
+  description = "Application Load Balancer genel erisim DNS adresi"
+  value       = aws_lb.main.dns_name
+}
