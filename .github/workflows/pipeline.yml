@@ -1,0 +1,46 @@
+name: "DevSecOps - IaC Security & Quality Pipeline"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate-and-scan:
+    name: "Validate, Lint & Security Scan"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout Source Code"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: "Setup Terraform"
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.9.5"
+
+      - name: "Terraform Format Check"
+        run: terraform fmt -check
+
+      - name: "Terraform Init"
+        run: terraform init -backend=false
+
+      - name: "Terraform Validate"
+        run: terraform validate
+
+      - name: "Run TFLint for Architecture Best Practices"
+        uses: terraform-linters/setup-tflint@5ee81c8152e9ff94f4f346e927ad9aef1e9cbbf5 # v4.0.0
+        with:
+          tflint_version: "v0.50.0"
+
+      - name: "Execute TFLint"
+        run: |
+          tflint --init
+          tflint -f compact
+
+      # CRITICAL FIX: soft_fail kaldirildi, pipeline fail-closed!
+      - name: "Run TFSec (Static Application Security Testing for IaC)"
+        uses: aquasecurity/tfsec-action@b466648d6e39e160ae52a12bd081adbf16b3d5b0 # v1.0.3
+        with:
+          soft_fail: false
