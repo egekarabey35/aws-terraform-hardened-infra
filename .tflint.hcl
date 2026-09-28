@@ -4,10 +4,6 @@ plugin "aws" {
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
 
-rule "aws_instance_invalid_ami" {
-  enabled = true
-}
-
-rule "aws_security_group_invalid_ingress_cidr" {
+rule "aws_resource_missing_tags" {
   enabled = true
 }

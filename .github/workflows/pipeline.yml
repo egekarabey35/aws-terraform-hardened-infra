@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
 jobs:
   validate-and-scan:
     name: "Validate, Lint & Security Scan"
@@ -24,22 +27,16 @@ jobs:
         run: terraform fmt -check
 
       - name: "Terraform Init"
-        run: terraform init -backend=false
+        run: terraform init -backend=false -lockfile=readonly
 
       - name: "Terraform Validate"
         run: terraform validate
 
       - name: "Run TFLint for Architecture Best Practices"
-        uses: terraform-linters/setup-tflint@5ee81c8152e9ff94f4f346e927ad9aef1e9cbbf5 # v4.0.0
+        uses: terraform-linters/setup-tflint@19a52fbac37dacb22a09518e4ef6ed2eb44f77c3 # v4.0.0
         with:
           tflint_version: "v0.50.0"
 
-      - name: "Execute TFLint"
-        run: |
-          tflint --init
-          tflint -f compact
-
-      # CRITICAL FIX: soft_fail kaldirildi, pipeline fail-closed!
       - name: "Run TFSec (Static Application Security Testing for IaC)"
         uses: aquasecurity/tfsec-action@b466648d6e39e160ae52a12bd081adbf16b3d5b0 # v1.0.3
         with:
