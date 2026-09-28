@@ -12,8 +12,10 @@ resource "aws_security_group" "app_sg" {
   tags        = { Name = "${var.environment}-app-sg" }
 }
 
-#tfsec:ignore:aws-ec2-no-public-ingress-sgr:exp: ALB is intentionally public-facing
+# Intentional public ingress for HTTP listener
+#tfsec:ignore:aws-ec2-no-public-ingress-sgr:exp:2030-01-01
 resource "aws_vpc_security_group_ingress_rule" "alb_http" {
+  description       = "Allow public inbound HTTP traffic for redirection"
   security_group_id = aws_security_group.alb_sg.id
   cidr_ipv4         = "0.0.0.0/0"
   from_port         = 80
@@ -21,8 +23,10 @@ resource "aws_vpc_security_group_ingress_rule" "alb_http" {
   ip_protocol       = "tcp"
 }
 
-#tfsec:ignore:aws-ec2-no-public-ingress-sgr:exp: ALB is intentionally public-facing
+# Intentional public ingress for HTTPS termination
+#tfsec:ignore:aws-ec2-no-public-ingress-sgr:exp:2030-01-01
 resource "aws_vpc_security_group_ingress_rule" "alb_https" {
+  description       = "Allow public inbound HTTPS traffic"
   security_group_id = aws_security_group.alb_sg.id
   cidr_ipv4         = "0.0.0.0/0"
   from_port         = 443
@@ -31,6 +35,7 @@ resource "aws_vpc_security_group_ingress_rule" "alb_https" {
 }
 
 resource "aws_vpc_security_group_egress_rule" "alb_to_app" {
+  description                  = "Forward traffic exclusively to private application nodes"
   security_group_id            = aws_security_group.alb_sg.id
   referenced_security_group_id = aws_security_group.app_sg.id
   from_port                    = 80
@@ -39,6 +44,7 @@ resource "aws_vpc_security_group_egress_rule" "alb_to_app" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "app_from_alb" {
+  description                  = "Accept ingress exclusively from ALB security group"
   security_group_id            = aws_security_group.app_sg.id
   referenced_security_group_id = aws_security_group.alb_sg.id
   from_port                    = 80
@@ -46,8 +52,10 @@ resource "aws_vpc_security_group_ingress_rule" "app_from_alb" {
   ip_protocol                  = "tcp"
 }
 
-#tfsec:ignore:aws-ec2-no-public-egress-sgr:exp: App nodes need HTTPS access to AWS APIs and Yum repos
+# Intentional egress for Linux repo updates and AWS API communication
+#tfsec:ignore:aws-ec2-no-public-egress-sgr:exp:2030-01-01
 resource "aws_vpc_security_group_egress_rule" "app_https_out" {
+  description       = "Allow outbound HTTPS for OS patching and AWS endpoints"
   security_group_id = aws_security_group.app_sg.id
   cidr_ipv4         = "0.0.0.0/0"
   from_port         = 443

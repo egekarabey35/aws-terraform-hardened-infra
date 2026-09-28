@@ -1,4 +1,4 @@
-#tfsec:ignore:aws-ec2-require-vpc-flow-logs-for-all-vpcs:exp: VPC Flow Logs disabled to avoid CloudWatch costs in demo environment
+#tfsec:ignore:aws-ec2-require-vpc-flow-logs-for-all-vpcs:exp:2030-01-01
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
@@ -8,14 +8,15 @@ resource "aws_vpc" "main" {
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
-  tags = { Name = "${var.environment}-igw" }
+  tags   = { Name = "${var.environment}-igw" }
 }
 
+# Subnetlerde otomatik public IP atamasi kapatildi (tfsec: aws-ec2-no-public-ip-subnet cozumu)
 resource "aws_subnet" "public_1" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = cidrsubnet(var.vpc_cidr, 8, 1)
   availability_zone       = "${var.aws_region}a"
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = false
   tags = { Name = "${var.environment}-public-subnet-1", Type = "Public" }
 }
 
@@ -23,7 +24,7 @@ resource "aws_subnet" "public_2" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = cidrsubnet(var.vpc_cidr, 8, 2)
   availability_zone       = "${var.aws_region}b"
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = false
   tags = { Name = "${var.environment}-public-subnet-2", Type = "Public" }
 }
 

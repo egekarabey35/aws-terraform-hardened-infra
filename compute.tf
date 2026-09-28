@@ -1,7 +1,46 @@
+data "aws_caller_identity" "current" {}
+
+# CRITICAL FIX: AutoScaling Service-Linked Role icin tam KMS Grant ve Key Policy
+data "aws_iam_policy_document" "ebs_key" {
+  statement {
+    sid       = "EnableRootAccount"
+    actions   = ["kms:*"]
+    resources = ["*"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+  statement {
+    sid       = "AllowAutoScalingUse"
+    actions   = ["kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:DescribeKey"]
+    resources = ["*"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"]
+    }
+  }
+  statement {
+    sid       = "AllowAutoScalingGrants"
+    actions   = ["kms:CreateGrant"]
+    resources = ["*"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"]
+    }
+    condition {
+      test     = "Bool"
+      variable = "kms:GrantIsForAWSResource"
+      values   = ["true"]
+    }
+  }
+}
+
 resource "aws_kms_key" "ebs" {
   description             = "KMS CMK for encrypting ASG EBS volumes"
   enable_key_rotation     = true
   deletion_window_in_days = 7
+  policy                  = data.aws_iam_policy_document.ebs_key.json
 }
 
 data "aws_ami" "amazon_linux" {
@@ -53,7 +92,8 @@ resource "aws_launch_template" "app" {
   }
 }
 
-#tfsec:ignore:aws-elb-alb-not-public:exp: This ALB is designed to serve public web traffic
+# Ingress internet-facing ALB intentional for demo public web service
+#tfsec:ignore:aws-elb-alb-not-public:exp:2030-01-01
 resource "aws_lb" "main" {
   name               = "${var.environment}-alb"
   internal           = false
