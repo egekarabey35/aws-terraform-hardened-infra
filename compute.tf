@@ -37,6 +37,7 @@ data "aws_iam_policy_document" "ebs_key" {
 }
 
 resource "aws_kms_key" "ebs" {
+  enable_key_rotation = true
   description             = "KMS CMK for encrypting ASG EBS volumes"
   enable_key_rotation     = true
   deletion_window_in_days = 7
@@ -53,6 +54,11 @@ data "aws_ami" "amazon_linux" {
 }
 
 resource "aws_launch_template" "app" {
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
   name_prefix   = "${var.environment}-app-template-"
   image_id      = data.aws_ami.amazon_linux.id
   instance_type = "t3.micro"
