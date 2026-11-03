@@ -21,10 +21,10 @@ output "alb_dns_name" {
 output "finops_cost_analysis" {
   description = "Estimated monthly baseline cost for this hardened infrastructure"
   value = {
-    compute_layer   = "2x t3.micro instances (Eligible for AWS Free Tier or ~$7.50/mo each)"
-    traffic_layer   = "1x Application Load Balancer (~$16.20/mo + LCU usage)"
-    storage_layer   = "Standard EBS gp3 root volumes (~$0.08/GB-month)"
-    total_baseline  = "Estimated ~$31 - $35/month baseline (Excluding Free Tier discounts)"
-    finops_strategy = "ASG scales down to min_size=1 off-hours to eliminate 50% compute waste"
+    compute_layer   = "Auto Scaling Group min_size=2 / desired_capacity=2, max_size=4 (t3.micro)"
+    traffic_layer   = "ALB and NAT Gateway incur hourly and data processing charges"
+    storage_layer   = "Encrypted gp3 volumes, at least two 8-GiB EBS roots"
+    total_baseline  = "Estimate region- and usage-specific prices with AWS Pricing Calculator; not calculated by this output"
+    finops_strategy = "The sample does not schedule scale-down; destroy ephemeral environments to avoid charges"
   }
 }
