@@ -53,9 +53,9 @@ data "aws_ami" "amazon_linux" {
 }
 
 resource "aws_launch_template" "app" {
-  name_prefix   = "${var.environment}-app-template-"
-  image_id      = data.aws_ami.amazon_linux.id
-  instance_type = "t3.micro"
+  name_prefix            = "${var.environment}-app-template-"
+  image_id               = data.aws_ami.amazon_linux.id
+  instance_type          = "t3.micro"
   vpc_security_group_ids = [aws_security_group.app_sg.id]
 
   metadata_options {
@@ -85,7 +85,7 @@ resource "aws_launch_template" "app" {
 
   tag_specifications {
     resource_type = "instance"
-    tags = { Name = "${var.environment}-app-node" }
+    tags          = { Name = "${var.environment}-app-node" }
   }
   lifecycle {
     create_before_destroy = true
@@ -100,8 +100,8 @@ resource "aws_lb" "main" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
   subnets            = [aws_subnet.public_1.id, aws_subnet.public_2.id]
-  
-  drop_invalid_header_fields = true 
+
+  drop_invalid_header_fields = true
 
   tags = { Name = "${var.environment}-alb" }
 }
@@ -137,7 +137,7 @@ resource "tls_self_signed_cert" "alb" {
 resource "aws_acm_certificate" "alb" {
   private_key      = tls_private_key.alb.private_key_pem
   certificate_body = tls_self_signed_cert.alb.cert_pem
-  tags = { Name = "${var.environment}-alb-cert" }
+  tags             = { Name = "${var.environment}-alb-cert" }
   lifecycle {
     create_before_destroy = true
   }
